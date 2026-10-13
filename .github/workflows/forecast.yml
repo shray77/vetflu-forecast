@@ -1,0 +1,84 @@
+name: forecast
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # понедельник 06:00 UTC = 09:00 МСК
+  workflow_dispatch:
+
+permissions:
+  contents: write   # коммит свежего снапшота WAHIS
+  pages: write
+  id-token: write
+
+concurrency:
+  group: forecast-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install (torch CPU отдельным колесом)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+
+      - name: Кэш модели TimesFM 2.5 (не качаем 925 МБ каждый запуск)
+        uses: actions/cache@v4
+        id: hfmodel
+        with:
+          path: ~/.cache/huggingface
+          key: hf-ubuntu-timesfm-2.5-200m-1d95242
+          restore-keys: |
+            hf-ubuntu-timesfm-2.5-200m-
+
+      - name: Свежий снапшот WAHIS
+        run: python -m vetflu_forecast.cli fetch
+
+      - name: Ретроспектива (бэктест против бейзлайнов)
+        run: python -m vetflu_forecast.cli backtest
+
+      - name: Живой прогноз (+4 недели)
+        run: python -m vetflu_forecast.cli forecast
+
+      - name: Закоммитить снапшот WAHIS (если изменился)
+        run: |
+          git config user.name "vetflu-bot"
+          git config user.email "vetflu-bot@users.noreply.github.com"
+          if ! git diff --quiet data/wahis_events.json; then
+            git add data/wahis_events.json
+            git commit -m "wahis snapshot (run ${{ github.run_id }})"
+            git push
+          else
+            echo "снапшот не изменился — коммит не нужен"
+          fi
+
+      - name: Артефакт результатов (для README/ворклога)
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: site/data/*.json
+          retention-days: 30
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

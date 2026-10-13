@@ -1,0 +1,7 @@
+# ВАЖНО: torch ставится ПЕРВЫМ отдельным CPU-колесом (иначе PyPI потянет CUDA ~2.5 ГБ):
+#   pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+timesfm[torch]==2.0.2
+pandas>=2.2,<3.0
+statsmodels>=0.14
+requests>=2.31
+pytest>=8.0

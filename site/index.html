@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VetFlu Forecast — TimesFM 2.5 (пилот)</title>
+<meta name="description" content="Пилот TimesFM 2.5 для vetflu: недельный прогноз ВПГП (WAHIS) на GitHub Actions + ретроспектива против бейзлайнов">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1117;--card:#161b22;--card2:#1c2129;--border:#2d333b;
+    --tx:#e6edf3;--tx2:#9198a1;--acc:#3fb950;--acc2:#58a6ff;--warn:#d29922;--bad:#f85149;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,"Segoe UI",Roboto,"PT Sans",sans-serif;padding:24px 16px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:26px;letter-spacing:.2px}
+  h2{font-size:18px;margin:34px 0 12px;color:var(--tx)}
+  .sub{color:var(--tx2);margin-top:4px;font-size:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12.5px;color:var(--tx2)}
+  .chip b{color:var(--tx);font-weight:600}
+  .banner{margin-top:22px;border:1px solid var(--border);border-left:4px solid var(--acc);background:var(--card);border-radius:10px;padding:16px 18px}
+  .banner.warn{border-left-color:var(--warn)}
+  .banner.bad{border-left-color:var(--bad)}
+  .banner .t{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--tx2);margin-bottom:4px}
+  .banner .v{font-size:17px;font-weight:600}
+  .banner .d{color:var(--tx2);font-size:13.5px;margin-top:4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .card h3{font-size:14px;color:var(--tx2);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--border)}
+  th{color:var(--tx2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  th:first-child,td:first-child{text-align:left}
+  tr.hl td{color:var(--acc);font-weight:700}
+  tr.best td:first-child::after{content:" ★";color:var(--acc2)}
+  .note{color:var(--tx2);font-size:13px;margin-top:10px}
+  .chartcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px}
+  .series-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .s-chip{cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:4px 12px;font-size:13px;color:var(--tx2)}
+  .s-chip.on{border-color:var(--acc2);color:var(--acc2)}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);color:var(--tx2);font-size:13px}
+  footer a{color:var(--acc2);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .err{color:var(--bad);margin-top:20px}
+  .verdict-mini{margin-top:8px;color:var(--tx2);font-size:13.5px}
+  @media(max-width:640px){body{padding:16px 10px 40px}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>VetFlu Forecast · TimesFM 2.5</h1>
+  <div class="sub">Пилот: недельный прогноз вспышек высокопатогенного гриппа птиц (WOAH WAHIS) foundation-моделью на GitHub Actions — и честная проверка, даёт ли она пользу против простой статистики.</div>
+  <div class="chips" id="meta-chips"></div>
+
+  <div id="verdicts"></div>
+
+  <h2>Ретроспектива (rolling-origin, MASE m=52)</h2>
+  <div class="grid" id="panels"></div>
+
+  <h2>Разрез по силе сезонности — свои ряды WAHIS</h2>
+  <div class="grid" id="buckets"></div>
+
+  <h2>Живой прогноз: ВПГП, недели (WOAH WAHIS)</h2>
+  <div class="chartcard">
+    <div class="series-chips" id="series-chips"></div>
+    <canvas id="fc" height="120"></canvas>
+    <div class="note">Линия — история (последние ~3 года), сплошной хвост — точечный прогноз TimesFM 2.5, залитая полоса — 10–90% квантили.</div>
+  </div>
+
+  <div id="err"></div>
+
+  <footer>
+    Источник данных: <a href="https://wahis.woah.org/">WOAH WAHIS</a> (публичный API). Модель:
+    <a href="https://huggingface.co/google/timesfm-2.5-200m-pytorch">google/timesfm-2.5-200m-pytorch</a>
+    (Apache-2.0), инференс на CPU в GitHub Actions, кэш модели — actions/cache.
+    Экосистема: <a href="https://shray77.github.io/vetflu-site/">vetflu-site</a> ·
+    <a href="https://github.com/google-research/timesfm">google-research/timesfm</a>.
+    Пилот, не система раннего предупреждения; официальные данные — Россельхознадзор (ФСВПС).
+  </footer>
+</div>
+
+<script>
+const BUCKET_RU = {strong:"сильная (r≥0.5)", mid:"средняя (0.2–0.5)", weak:"слабая (<0.2)"};
+const STATUS = {
+  value:   {cls:"", label:"TimesFM даёт пользу"},
+  parity:  {cls:"warn", label:"Паритет с бейзлайном"},
+  no_value:{cls:"bad", label:"TimesFM избыточен"}
+};
+
+function chips(meta){
+  const c = document.getElementById("meta-chips");
+  c.innerHTML = [
+    `<span class="chip">модель <b>${meta.model.repo.split("/")[1]}</b></span>`,
+    `<span class="chip">ревизия <b>${meta.model.revision}</b></span>`,
+    meta.git_sha ? `<span class="chip">commit <b>${meta.git_sha}</b></span>` : "",
+    `<span class="chip">обновлено <b>${meta.generated_at}</b></span>`
+  ].join("");
+}
+
+function verdictBanner(title, verdict, extra){
+  const st = STATUS[verdict.status] || STATUS.parity;
+  return `<div class="banner ${st.cls}">
+    <div class="t">${title}</div>
+    <div class="v">${st.label} · skill ${verdict.skill>0?"+":""}${(verdict.skill*100).toFixed(1)}% против ${verdict.best_baseline}</div>
+    <div class="d">${verdict.text}${extra||""}</div>
+  </div>`;
+}
+
+function panelTable(p){
+  const best = p.verdict.best_baseline;
+  const rows = p.summary.map(r=>`
+    <tr class="${r.model==="timesfm"?"hl":""}${r.model===best?" best":""}">
+      <td>${r.model}</td><td>${r.mase.toFixed(3)}</td><td>${(r.wape*100).toFixed(1)}%</td>
+      <td>${r.smape.toFixed(1)}%</td><td>${r.rmse.toFixed(2)}</td><td>${r.n_pairs}</td>
+    </tr>`).join("");
+  return `<div class="card"><h3>${p.title} · h=${p.h} · ${p.n_series} рядов</h3>
+    <table><tr><th>модель</th><th>MASE↓</th><th>WAPE</th><th>sMAPE</th><th>RMSE</th><th>пар</th></tr>${rows}</table>
+    <div class="verdict-mini">★ — лучший бейзлайн; зелёная строка — TimesFM. Скилл: ${p.verdict.skill>0?"+":""}${(p.verdict.skill*100).toFixed(1)}%.</div>
+  </div>`;
+}
+
+function bucketTable(p){
+  if(!p.buckets || !p.buckets.length) return "";
+  const models = p.summary.map(r=>r.model);
+  const rows = p.buckets.map(b=>{
+    const by = {}; b.summary.forEach(r=>by[r.model]=r.mase);
+    return `<tr><td>${BUCKET_RU[b.bucket]||b.bucket} · ${b.n_pairs} пар</td>` +
+      models.map(m=>`<td>${by[m]!=null?by[m].toFixed(3):"—"}</td>`).join("") + `</tr>`;
+  }).join("");
+  const head = models.map(m=>`<th>${m}</th>`).join("");
+  return `<div class="card"><h3>${p.title} — MASE по силе сезонности</h3>
+    <table><tr><th>бакет</th>${head}</tr>${rows}</table></div>`;
+}
+
+let chart=null;
+function drawForecast(fdata, key){
+  const s = fdata.series.find(x=>x.key===key);
+  const labels = s.history.weeks.concat(s.forecast.weeks);
+  const hist = s.history.values.concat(Array(s.forecast.point.length).fill(null));
+  const pt = Array(s.history.values.length-1).fill(null).concat([s.history.values[s.history.values.length-1]], s.forecast.point);
+  const q10 = Array(s.history.values.length-1).fill(null).concat([s.history.values[s.history.values.length-1]], s.forecast.q10);
+  const q90 = Array(s.history.values.length-1).fill(null).concat([s.history.values[s.history.values.length-1]], s.forecast.q90);
+  const band = q90.map((v,i)=> (v==null||q10[i]==null) ? null : [q10[i], v]);
+  if(chart) chart.destroy();
+  chart = new Chart(document.getElementById("fc"), {
+    type:"line",
+    data:{labels, datasets:[
+      {label:"история", data:hist, borderColor:"#58a6ff", backgroundColor:"#58a6ff33", pointRadius:0, borderWidth:1.6, tension:.25},
+      {label:"прогноз", data:pt, borderColor:"#3fb950", backgroundColor:"#3fb95033", pointRadius:3, borderWidth:2, borderDash:[6,4]},
+      {label:"q10–q90", data:band, borderColor:"transparent", backgroundColor:"#3fb95022", fill:"-",
+       pointRadius:0, borderWidth:0},
+      {label:"q90", data:q90, borderColor:"transparent", pointRadius:0, borderWidth:0},
+    ]},
+    options:{
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:"#9198a1", boxWidth:14}},
+        tooltip:{callbacks:{label:(c)=>c.dataset.label+": "+(Array.isArray(c.raw)?c.raw[1]:c.raw)}}},
+      scales:{x:{ticks:{color:"#9198a1", maxTicksLimit:9, font:{size:11}}, grid:{color:"#21262d"}},
+              y:{ticks:{color:"#9198a1"}, grid:{color:"#21262d"}, title:{display:true,text:"событий/нед.",color:"#9198a1"}}}
+    }
+  });
+}
+
+(async function(){
+  try{
+    const [retro, fc] = await Promise.all([
+      fetch("./data/retrospective.json").then(r=>{if(!r.ok)throw 0;return r.json()}),
+      fetch("./data/forecast.json").then(r=>{if(!r.ok)throw 0;return r.json()})
+    ]);
+    chips({model:retro.model, git_sha:retro.git_sha, generated_at:retro.generated_at});
+
+    const wahis = retro.panels.find(p=>p.label==="wahis");
+    const m4 = retro.panels.find(p=>p.label==="m4");
+    document.getElementById("verdicts").innerHTML =
+      verdictBanner("Свои ряды · ВПГП (WAHIS, h=4)", wahis.verdict,
+        ` — пар: ${wahis.n_pairs}`) +
+      verdictBanner("Методологическая проверка · M4 Weekly (h=13)", m4.verdict,
+        ` — рядов: ${m4.n_series}, пар: ${m4.n_pairs}`);
+
+    document.getElementById("panels").innerHTML = retro.panels.map(panelTable).join("");
+    document.getElementById("buckets").innerHTML = wahis.buckets ? bucketTable(wahis) : "<div class='card'>нет разрезов</div>";
+
+    const chipsEl = document.getElementById("series-chips");
+    chipsEl.innerHTML = fc.series.map((s,i)=>`<span class="s-chip${i===0?" on":""}" data-key="${s.key}">${s.label}</span>`).join("");
+    chipsEl.addEventListener("click", e=>{
+      const el = e.target.closest(".s-chip"); if(!el) return;
+      chipsEl.querySelectorAll(".s-chip").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on"); drawForecast(fc, el.dataset.key);
+    });
+    drawForecast(fc, fc.series[0].key);
+  }catch(e){
+    document.getElementById("err").innerHTML =
+      `<div class="err">Артефакты ретроспективы/прогноза не найдены. Запусти воркер: <code>python -m vetflu_forecast.cli all</code> или dispatch workflow <b>forecast</b>.</div>`;
+  }
+})();
+</script>
+</body>
+</html>
