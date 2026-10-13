@@ -50,16 +50,19 @@ jobs:
       - name: Живой прогноз (+4 недели)
         run: python -m vetflu_forecast.cli forecast
 
-      - name: Закоммитить снапшот WAHIS (если изменился)
+      - name: Прогноз по округам РФ (+4 недели, для vet-heatmap)
+        run: python -m vetflu_forecast.cli forecast-regions
+
+      - name: Закоммитить снапшоты (если изменились)
         run: |
           git config user.name "vetflu-bot"
           git config user.email "vetflu-bot@users.noreply.github.com"
-          if ! git diff --quiet data/wahis_events.json; then
-            git add data/wahis_events.json
-            git commit -m "wahis snapshot (run ${{ github.run_id }})"
+          if [ -n "$(git status --porcelain data/)" ]; then
+            git add data/
+            git commit -m "data snapshots (run ${{ github.run_id }})"
             git push
           else
-            echo "снапшот не изменился — коммит не нужен"
+            echo "снапшоты не изменились — коммит не нужен"
           fi
 
       - name: Артефакт результатов (для README/ворклога)

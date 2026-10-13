@@ -64,6 +64,18 @@ CORRIDORS = {
     },
 }
 
+# --- vet-heatmap: регионы РФ (округа × группы болезней) ---
+# Источник: витрина vet-heatmap, data/outbreaks.json (обновляется каждые 6 ч,
+# CORS *). Ряды сглаживаются скользящим средним: на сырых счётчиках TimesFM в
+# паритете с наивной (панель wahis), на сглаженных ожидаем пользу.
+HEATMAP_OUTBREAKS_URL = "https://shray77.github.io/vet-heatmap/data/outbreaks.json"
+HORIZON_REGIONS = 4
+REGIONS_START = "2023-01-01"   # плотная эра данных начинается в 2024; даём год контекста
+REGIONS_SMOOTH_WEEKS = 4       # окно скользящего среднего (недель)
+REGIONS_MIN_EVENTS = 24        # минимум событий с REGIONS_START, иначе серия не берём
+REGIONS_ORIGINS = 6
+REGIONS_ORIGIN_STEP = 8
+
 # --- бэктест ---
 BACKTEST_SEED = 42
 M4_N_SERIES = 120        # выборка из 359 рядов M4 Weekly (стратификация по длине не нужна)
@@ -72,6 +84,6 @@ M4_ORIGIN_STEP = 13
 M4_MIN_LEN = MIN_CTX + HORIZON_M4          # 117
 WAHIS_ORIGINS = 6
 WAHIS_ORIGIN_STEP = 8
-USE_HOLT_WINTERS = {"wahis": True, "m4": False}  # HW дорог: только на своих рядах
+USE_HOLT_WINTERS = {"wahis": True, "m4": False, "regions": True}  # HW дорог: только на своих рядах
 
 VERDICT_MARGIN = 0.05  # |skill| <= 5% -> паритет

@@ -8,7 +8,7 @@ import sys
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="vetflu-forecast",
                                 description="TimesFM 2.5 пилот: worker + ретроспектива")
-    p.add_argument("command", choices=["fetch", "backtest", "forecast", "all"])
+    p.add_argument("command", choices=["fetch", "backtest", "forecast", "forecast-regions", "all"])
     p.add_argument("--out", default=None, help="каталог для JSON (по умолчанию site/data)")
     p.add_argument("--m4-n", type=int, default=None,
                    help="размер выборки M4 Weekly для бэктеста (по умолчанию 120)")
@@ -33,6 +33,10 @@ def main(argv=None) -> int:
         from .pipeline import cmd_forecast
 
         cmd_forecast(out_dir=out)
+    if args.command in ("forecast-regions", "all"):
+        from .pipeline import cmd_forecast_regions
+
+        cmd_forecast_regions(out_dir=out)
     return 0
 
 
