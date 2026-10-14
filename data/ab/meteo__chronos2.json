@@ -1,0 +1,17 @@
+{
+ "panel": "meteo",
+ "model": "chronos2",
+ "h": 4,
+ "n_series": 8,
+ "n_pairs": 48,
+ "summary": [
+  {
+   "model": "chronos2",
+   "mase": 0.6952,
+   "wape": 0.1177,
+   "smape": 26.87,
+   "rmse": 4.7993,
+   "n_pairs": 48
+  }
+ ]
+}

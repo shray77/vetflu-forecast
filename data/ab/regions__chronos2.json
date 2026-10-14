@@ -1,0 +1,17 @@
+{
+ "panel": "regions",
+ "model": "chronos2",
+ "h": 4,
+ "n_series": 27,
+ "n_pairs": 162,
+ "summary": [
+  {
+   "model": "chronos2",
+   "mase": 0.6707,
+   "wape": 0.2516,
+   "smape": 85.95,
+   "rmse": 1.0759,
+   "n_pairs": 162
+  }
+ ]
+}

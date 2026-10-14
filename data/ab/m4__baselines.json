@@ -1,0 +1,41 @@
+{
+ "panel": "m4",
+ "model": "baselines",
+ "h": 13,
+ "n_series": 120,
+ "n_pairs": 480,
+ "summary": [
+  {
+   "model": "naive",
+   "mase": 0.5456,
+   "wape": 0.0516,
+   "smape": 6.96,
+   "rmse": 646.4281,
+   "n_pairs": 480
+  },
+  {
+   "model": "snaive",
+   "mase": 1.3349,
+   "wape": 0.1317,
+   "smape": 13.8,
+   "rmse": 1712.6377,
+   "n_pairs": 480
+  },
+  {
+   "model": "drift",
+   "mase": 0.5413,
+   "wape": 0.0515,
+   "smape": 7.0,
+   "rmse": 644.6145,
+   "n_pairs": 480
+  },
+  {
+   "model": "sma8",
+   "mase": 0.5832,
+   "wape": 0.0575,
+   "smape": 8.02,
+   "rmse": 735.6191,
+   "n_pairs": 480
+  }
+ ]
+}

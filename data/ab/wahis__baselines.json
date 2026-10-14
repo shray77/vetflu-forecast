@@ -1,0 +1,49 @@
+{
+ "panel": "wahis",
+ "model": "baselines",
+ "h": 4,
+ "n_series": 5,
+ "n_pairs": 30,
+ "summary": [
+  {
+   "model": "naive",
+   "mase": 0.9081,
+   "wape": 0.7687,
+   "smape": 88.91,
+   "rmse": 1.3557,
+   "n_pairs": 30
+  },
+  {
+   "model": "snaive",
+   "mase": 1.4685,
+   "wape": 1.2206,
+   "smape": 109.3,
+   "rmse": 2.1926,
+   "n_pairs": 30
+  },
+  {
+   "model": "drift",
+   "mase": 0.9097,
+   "wape": 0.7697,
+   "smape": 115.59,
+   "rmse": 1.356,
+   "n_pairs": 30
+  },
+  {
+   "model": "sma8",
+   "mase": 1.1987,
+   "wape": 0.9373,
+   "smape": 99.63,
+   "rmse": 1.6511,
+   "n_pairs": 30
+  },
+  {
+   "model": "hw",
+   "mase": 1.1736,
+   "wape": 0.8605,
+   "smape": 149.69,
+   "rmse": 1.379,
+   "n_pairs": 30
+  }
+ ]
+}

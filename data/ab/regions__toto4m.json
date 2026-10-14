@@ -1,0 +1,17 @@
+{
+ "panel": "regions",
+ "model": "toto4m",
+ "h": 4,
+ "n_series": 27,
+ "n_pairs": 162,
+ "summary": [
+  {
+   "model": "toto4m",
+   "mase": 0.6599,
+   "wape": 0.2574,
+   "smape": 84.69,
+   "rmse": 1.1011,
+   "n_pairs": 162
+  }
+ ]
+}

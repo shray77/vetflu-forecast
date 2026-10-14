@@ -1,0 +1,41 @@
+{
+ "panel": "meteo",
+ "model": "baselines",
+ "h": 4,
+ "n_series": 8,
+ "n_pairs": 48,
+ "summary": [
+  {
+   "model": "naive",
+   "mase": 1.158,
+   "wape": 0.1991,
+   "smape": 46.62,
+   "rmse": 7.7348,
+   "n_pairs": 48
+  },
+  {
+   "model": "snaive",
+   "mase": 0.9135,
+   "wape": 0.1528,
+   "smape": 35.15,
+   "rmse": 5.9818,
+   "n_pairs": 48
+  },
+  {
+   "model": "drift",
+   "mase": 1.1636,
+   "wape": 0.2,
+   "smape": 46.73,
+   "rmse": 7.7559,
+   "n_pairs": 48
+  },
+  {
+   "model": "sma8",
+   "mase": 2.3034,
+   "wape": 0.3835,
+   "smape": 72.22,
+   "rmse": 13.8279,
+   "n_pairs": 48
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "panel": "meteo",
+ "model": "timesfm",
+ "h": 4,
+ "n_series": 8,
+ "n_pairs": 48,
+ "summary": [
+  {
+   "model": "timesfm",
+   "mase": 0.6728,
+   "wape": 0.1111,
+   "smape": 25.97,
+   "rmse": 4.5835,
+   "n_pairs": 48
+  }
+ ]
+}

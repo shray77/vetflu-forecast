@@ -1,0 +1,17 @@
+{
+ "panel": "wahis",
+ "model": "toto4m",
+ "h": 4,
+ "n_series": 5,
+ "n_pairs": 30,
+ "summary": [
+  {
+   "model": "toto4m",
+   "mase": 0.8771,
+   "wape": 0.7275,
+   "smape": 158.75,
+   "rmse": 1.2849,
+   "n_pairs": 30
+  }
+ ]
+}

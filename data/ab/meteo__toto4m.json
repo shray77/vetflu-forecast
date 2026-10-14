@@ -1,0 +1,17 @@
+{
+ "panel": "meteo",
+ "model": "toto4m",
+ "h": 4,
+ "n_series": 8,
+ "n_pairs": 48,
+ "summary": [
+  {
+   "model": "toto4m",
+   "mase": 0.6982,
+   "wape": 0.1171,
+   "smape": 28.18,
+   "rmse": 4.8506,
+   "n_pairs": 48
+  }
+ ]
+}

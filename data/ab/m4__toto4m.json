@@ -1,0 +1,17 @@
+{
+ "panel": "m4",
+ "model": "toto4m",
+ "h": 13,
+ "n_series": 120,
+ "n_pairs": 480,
+ "summary": [
+  {
+   "model": "toto4m",
+   "mase": 0.379,
+   "wape": 0.0389,
+   "smape": 4.72,
+   "rmse": 599.6514,
+   "n_pairs": 480
+  }
+ ]
+}

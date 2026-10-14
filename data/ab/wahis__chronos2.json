@@ -1,0 +1,17 @@
+{
+ "panel": "wahis",
+ "model": "chronos2",
+ "h": 4,
+ "n_series": 5,
+ "n_pairs": 30,
+ "summary": [
+  {
+   "model": "chronos2",
+   "mase": 0.9337,
+   "wape": 0.7716,
+   "smape": 154.71,
+   "rmse": 1.3351,
+   "n_pairs": 30
+  }
+ ]
+}

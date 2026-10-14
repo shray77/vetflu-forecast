@@ -1,0 +1,17 @@
+{
+ "panel": "m4",
+ "model": "chronos2",
+ "h": 13,
+ "n_series": 120,
+ "n_pairs": 480,
+ "summary": [
+  {
+   "model": "chronos2",
+   "mase": 0.3591,
+   "wape": 0.0361,
+   "smape": 4.49,
+   "rmse": 538.8261,
+   "n_pairs": 480
+  }
+ ]
+}
